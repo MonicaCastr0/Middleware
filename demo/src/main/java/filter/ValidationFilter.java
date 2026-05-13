@@ -1,5 +1,4 @@
 package filter;
-
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,16 +23,22 @@ public class ValidationFilter implements Filter {
             CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(httpRequest);
             String body = new String(wrappedRequest.getInputStream().readAllBytes());
 
-            // Verificação se os campos 'nome' e 'email' existem e se email tem '@'
-            if (!body.contains("\"nome\"") || !body.contains("\"email\"") || !body.contains("@")) {
+            boolean temNome = body.contains("\"nome\"");
+            boolean temEmail = body.contains("\"email\"");
 
-                //Interrupção com erro 400 se dados estiverem incompletos
+            // 2. Verifica se os valores estão vazios ou com espaços: "" ou "  "
+            boolean nomeVazio = body.contains("\"nome\":\"\"") || body.contains("\"nome\": \"\"") || body.contains("\"nome\": \" \"");
+            boolean emailVazio = body.contains("\"email\":\"\"") || body.contains("\"email\": \"\"") || body.contains("\"email\": \" \"");
+
+            boolean temArroba = body.contains("@");
+
+            //Se não tem as chaves OU se os valores estão vazios OU não tem @
+            if (!temNome || !temEmail || nomeVazio || emailVazio || !temArroba) {
                 httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 httpResponse.setContentType("application/json");
-                httpResponse.getWriter().write("{\"error\":\"Dados invalidos ou incompletos, nome e email obrigatorios\"}");
-                return; // Bloqueia a requisição
+                httpResponse.getWriter().write("{\"error\":\"Dados invalidos ou incompletos, nome e email obrigatorios e preenchidos\"}");
+                return;
             }
-
 
             chain.doFilter(wrappedRequest, response);
             return;
