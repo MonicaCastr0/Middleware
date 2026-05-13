@@ -17,7 +17,7 @@ import java.io.IOException;
 @Order(2)
 public class AuthFilter implements Filter {
 
-    @Value("${auth.token:secret}")
+    @Value("${auth.token:token=123}")
     private String expectedToken;
 
     @Override
@@ -39,17 +39,14 @@ public class AuthFilter implements Filter {
 
         String authHeader = httpRequest.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7).trim();
-            if (!token.isEmpty() && token.equals(expectedToken)) {
-                chain.doFilter(request, response);
-                return;
-            }
+        if (authHeader != null && authHeader.trim().equals(expectedToken)) {
+            chain.doFilter(request, response);
+            return;
         }
 
         httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         httpResponse.setContentType("application/json");
-        httpResponse.getWriter().write("{\"error\":\"Unauthorized\"}");
+        httpResponse.getWriter().write("error: Unauthorized");
     }
 }
 
